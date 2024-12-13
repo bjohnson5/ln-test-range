@@ -117,6 +117,8 @@ async fn main() {
         }
     }
 
+    pause();
+
     // Finalize the simulation and make it ready to run
     match blast.finalize_simulation().await {
         Ok(_) => {},
@@ -182,44 +184,125 @@ async fn stop(mut blast: Blast, models: Vec<Child>, sim_tasks: Option<JoinSet<()
 }
 
 async fn connect(blast: &mut Blast) -> Result<(), String> {
-    let _ = blast.connect_peer(String::from("blast_lnd-0000"), String::from("blast_lnd-0001")).await?;
+    let _ = blast.connect_peer(blast_lnd_node(0), blast_cln_node(0)).await?;
+    let _ = blast.connect_peer(blast_cln_node(1), blast_lnd_node(1)).await?;
+    let _ = blast.connect_peer(blast_lnd_node(2), blast_ldk_node(0)).await?;
+    let _ = blast.connect_peer(blast_cln_node(3), blast_ldk_node(1)).await?;
+    let _ = blast.connect_peer(blast_ldk_node(0), blast_cln_node(2)).await?;
+    let _ = blast.connect_peer(blast_ldk_node(1), blast_lnd_node(3)).await?;
+    let _ = blast.connect_peer(blast_cln_node(7), blast_ldk_node(2)).await?;
+    let _ = blast.connect_peer(blast_cln_node(8), blast_ldk_node(3)).await?;
+    let _ = blast.connect_peer(blast_cln_node(9), blast_ldk_node(4)).await?;
+    let _ = blast.connect_peer(blast_ldk_node(2), blast_ldk_node(5)).await?;
+    let _ = blast.connect_peer(blast_ldk_node(3), blast_lnd_node(4)).await?;
+    let _ = blast.connect_peer(blast_ldk_node(4), blast_lnd_node(4)).await?;
+    let _ = blast.connect_peer(blast_ldk_node(5), blast_lnd_node(4)).await?;
+
+    for i in 5..25 {
+        let _ = blast.connect_peer(blast_lnd_node(4), blast_lnd_node(i)).await?;
+    }
+
+    for i in 25..45 {
+        let _ = blast.connect_peer(blast_lnd_node(4), blast_ldk_node(i)).await?;
+    }
+
+    for i in 5..25 {
+        let _ = blast.connect_peer(blast_lnd_node(i), blast_ldk_node(i)).await?;
+        let _ = blast.connect_peer(blast_ldk_node(i), blast_cln_node(5)).await?;
+    }
+
+    for i in 25..45 {
+        let _ = blast.connect_peer(blast_ldk_node(i), blast_lnd_node(i)).await?;
+        let _ = blast.connect_peer(blast_lnd_node(i), blast_cln_node(6)).await?;
+    }
+
     Ok(())
 }
 
 async fn fund(blast: &mut Blast) -> Result<(), String> {
-    for i in 0..NUM_LND-2 {
+    for i in 0..NUM_LND {
+        if i == 4 {
+            continue;
+        }
         let _ = blast.fund_node(blast_lnd_node(i), 1.0, false).await?;
     }
-    let _ = blast.fund_node(blast_lnd_node(NUM_LND-1), 1.0, true).await?;
 
-    for i in 0..NUM_LDK-2 {
+    for i in 0..NUM_LDK {
         let _ = blast.fund_node(blast_ldk_node(i), 1.0, false).await?;
     }
-    let _ = blast.fund_node(blast_ldk_node(NUM_LDK-1), 1.0, true).await?;
 
-    for i in 0..NUM_CLN-2 {
+    for i in 0..NUM_CLN {
         let _ = blast.fund_node(blast_cln_node(i), 1.0, false).await?;
     }
-    let _ = blast.fund_node(blast_cln_node(NUM_CLN-1), 1.0, true).await?;
+
+    for _ in 0..39 {
+        let _ = blast.fund_node(blast_lnd_node(4), 0.025, false).await?;
+    }
+    let _ = blast.fund_node(blast_lnd_node(4), 0.025, true).await?;
 
     Ok(())
 }
 
 async fn open(blast: &mut Blast)-> Result<(), String> {
-    let _ = blast.open_channel(String::from("blast_lnd-0000"), String::from("blast_lnd-0001"), 30000, 0, 0, true).await?;
+    let mut id = 12;
+    for i in 5..25 {
+        let _ = blast.open_channel(blast_lnd_node(4), blast_lnd_node(i), 500000, 0, id, true).await?;
+        id = id+1;
+    }
+
+    for i in 25..45 {
+        let _ = blast.open_channel(blast_lnd_node(4), blast_ldk_node(i), 500000, 0, id, true).await?;
+        id = id+1;
+    }
+
+    for i in 5..25 {
+        let _ = blast.open_channel(blast_lnd_node(i), blast_ldk_node(i), 500000, 0, id, false).await?;
+        let _ = blast.open_channel(blast_ldk_node(i), blast_cln_node(5), 500000, 0, id, false).await?;
+        id = id+1;
+    }
+
+    for i in 25..45 {
+        let _ = blast.open_channel(blast_ldk_node(i), blast_lnd_node(i), 500000, 0, id, false).await?;
+        let _ = blast.open_channel(blast_lnd_node(i), blast_cln_node(6), 500000, 0, id, false).await?;
+        id = id+1;
+    }
+
+    let _ = blast.open_channel(blast_lnd_node(0), blast_cln_node(0), 500000, 0, 0, false).await?;
+    let _ = blast.open_channel(blast_cln_node(1), blast_lnd_node(1), 500000, 0, 1, false).await?;
+    let _ = blast.open_channel(blast_lnd_node(2), blast_ldk_node(0), 500000, 0, 2, false).await?;
+    let _ = blast.open_channel(blast_cln_node(3), blast_ldk_node(1), 500000, 0, 3, false).await?;
+    let _ = blast.open_channel(blast_ldk_node(0), blast_cln_node(2), 500000, 0, 4, false).await?;
+    let _ = blast.open_channel(blast_ldk_node(1), blast_lnd_node(3), 500000, 0, 5, false).await?;
+    let _ = blast.open_channel(blast_cln_node(7), blast_ldk_node(2), 500000, 0, 6, false).await?;
+    let _ = blast.open_channel(blast_cln_node(8), blast_ldk_node(3), 500000, 0, 7, false).await?;
+    let _ = blast.open_channel(blast_cln_node(9), blast_ldk_node(4), 500000, 0, 8, false).await?;
+    let _ = blast.open_channel(blast_ldk_node(2), blast_ldk_node(5), 500000, 0, 9, false).await?;
+    let _ = blast.open_channel(blast_ldk_node(3), blast_lnd_node(4), 500000, 0, 10, false).await?;
+    let _ = blast.open_channel(blast_ldk_node(4), blast_lnd_node(4), 500000, 0, 11, false).await?;
+    let _ = blast.open_channel(blast_ldk_node(5), blast_lnd_node(4), 500000, 0, id, true).await?;
+
     Ok(())
 }
 
 async fn activity(blast: &mut Blast)-> Result<(), String> {
-    blast.add_activity("blast_lnd-0000", "blast_lnd-0001", None, None, 1, 2000);
+    blast.add_activity(&blast_lnd_node(0), &blast_cln_node(0), None, None, 1, 2000);
+    blast.add_activity(&blast_cln_node(1), &blast_lnd_node(1), None, None, 1, 3000);
+    blast.add_activity(&blast_lnd_node(2), &blast_cln_node(2), None, None, 1, 4000);
+    blast.add_activity(&blast_cln_node(3), &blast_lnd_node(3), None, None, 1, 5000);
+    blast.add_activity(&blast_lnd_node(4), &blast_cln_node(5), None, None, 5, 6000);
+    blast.add_activity(&blast_lnd_node(4), &blast_cln_node(6), None, None, 5, 7000);
+    blast.add_activity(&blast_cln_node(7), &blast_lnd_node(4), None, None, 10, 8000);
+    blast.add_activity(&blast_cln_node(8), &blast_lnd_node(4), None, None, 10, 9000);
+    blast.add_activity(&blast_cln_node(9), &blast_lnd_node(4), None, None, 10, 9500);
+
     Ok(())
 }
 
-async fn events(blast: &mut Blast)-> Result<(), String> {
-    let mut good_close = Vec::new();
-    good_close.push(String::from("blast_lnd-0000"));
-    good_close.push(String::from("0"));
-    let _ = blast.add_event(10, "CloseChannel", Some(good_close.clone()))?;
+async fn events(_blast: &mut Blast)-> Result<(), String> {
+    //let mut good_close = Vec::new();
+    //good_close.push(String::from("blast_lnd-0000"));
+    //good_close.push(String::from("0"));
+    //let _ = blast.add_event(10, "CloseChannel", Some(good_close.clone()))?;
     Ok(())
 }
 
