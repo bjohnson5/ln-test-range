@@ -299,10 +299,6 @@ async fn activity(blast: &mut Blast)-> Result<(), String> {
 }
 
 async fn events(_blast: &mut Blast)-> Result<(), String> {
-    //let mut good_close = Vec::new();
-    //good_close.push(String::from("blast_lnd-0000"));
-    //good_close.push(String::from("0"));
-    //let _ = blast.add_event(10, "CloseChannel", Some(good_close.clone()))?;
     Ok(())
 }
 

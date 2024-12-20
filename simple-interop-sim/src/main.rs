@@ -195,11 +195,11 @@ async fn connect(blast: &mut Blast) -> Result<(), String> {
 }
 
 async fn fund(blast: &mut Blast) -> Result<(), String> {
-    let _ = blast.fund_node(blast_lnd_node(0), 1.0, true).await?;
-    let _ = blast.fund_node(blast_cln_node(1), 1.0, true).await?;
-    let _ = blast.fund_node(blast_cln_node(2), 1.0, true).await?;
-    let _ = blast.fund_node(blast_ldk_node(2), 1.0, true).await?;
-    let _ = blast.fund_node(blast_lnd_node(3), 1.0, true).await?;
+    let _ = blast.fund_node(blast_lnd_node(0), 1.0, false).await?;
+    let _ = blast.fund_node(blast_cln_node(1), 1.0, false).await?;
+    let _ = blast.fund_node(blast_cln_node(2), 1.0, false).await?;
+    let _ = blast.fund_node(blast_ldk_node(2), 1.0, false).await?;
+    let _ = blast.fund_node(blast_lnd_node(3), 1.0, false).await?;
     let _ = blast.fund_node(blast_ldk_node(3), 1.0, true).await?;
 
     Ok(())
@@ -208,9 +208,9 @@ async fn fund(blast: &mut Blast) -> Result<(), String> {
 async fn open(blast: &mut Blast)-> Result<(), String> {
     let _ = blast.open_channel(blast_lnd_node(0), blast_cln_node(0), 500000, 0, 0, false).await?;
     let _ = blast.open_channel(blast_cln_node(1), blast_lnd_node(1), 500000, 0, 1, false).await?;
-    let _ = blast.open_channel(blast_cln_node(2), blast_ldk_node(2), 500000, 0, 2, true).await?;
+    let _ = blast.open_channel(blast_cln_node(2), blast_ldk_node(2), 500000, 0, 2, false).await?;
     let _ = blast.open_channel(blast_ldk_node(2), blast_lnd_node(2), 500000, 0, 3, false).await?;
-    let _ = blast.open_channel(blast_lnd_node(3), blast_ldk_node(3), 500000, 0, 4, true).await?;
+    let _ = blast.open_channel(blast_lnd_node(3), blast_ldk_node(3), 500000, 0, 4, false).await?;
     let _ = blast.open_channel(blast_ldk_node(3), blast_cln_node(3), 500000, 0, 5, true).await?;
 
     Ok(())
