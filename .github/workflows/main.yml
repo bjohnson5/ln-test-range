@@ -6,6 +6,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - name: Checkout LN_TEST_RANGE
         uses: actions/checkout@v4
       - name: Build big-interop-sim
